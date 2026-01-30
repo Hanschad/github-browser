@@ -17,20 +17,29 @@ async function handleOpenInIDE(url) {
     ide: 'code'
   });
 
-  const response = await fetch(`${config.serviceUrl}/open`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      url: url,
-      ide: config.ide
-    })
-  });
+  let response;
+  try {
+    response = await fetch(`${config.serviceUrl}/open`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        url: url,
+        ide: config.ide
+      })
+    });
+  } catch (e) {
+    throw new Error('Cannot connect to service. Make sure it is running on ' + config.serviceUrl);
+  }
 
   if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.message || 'Failed to open repository');
+    let errorMsg = 'Failed to open repository';
+    try {
+      const error = await response.json();
+      errorMsg = error.message || errorMsg;
+    } catch (e) {}
+    throw new Error(errorMsg);
   }
 
   return await response.json();

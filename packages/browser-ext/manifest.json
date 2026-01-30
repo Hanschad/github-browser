@@ -3,6 +3,12 @@
   "name": "GitHub Browser",
   "version": "1.0.0",
   "description": "Open GitHub repositories and PRs instantly in your local IDE with full LSP support",
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "github-browser@example.com",
+      "strict_min_version": "109.0"
+    }
+  },
   "permissions": [
     "activeTab",
     "clipboardWrite",
@@ -32,7 +38,10 @@
     }
   ],
   "background": {
-    "service_worker": "background.js"
+    "scripts": ["background.js"]
   },
-  "options_page": "options.html"
+  "options_ui": {
+    "page": "options.html",
+    "open_in_tab": true
+  }
 }

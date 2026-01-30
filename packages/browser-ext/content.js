@@ -47,39 +47,27 @@
   // 打开 IDE
   async function openInIDE(url) {
     try {
-      // 获取配置
-      const config = await chrome.storage.sync.get({
-        serviceUrl: 'http://localhost:9527',
-        ide: 'code'
-      });
-
       // 显示加载状态
       showNotification('Opening in IDE...', 'info');
 
-      // 发送请求到本地服务
-      const response = await fetch(`${config.serviceUrl}/open`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          url: url,
-          ide: config.ide
-        })
+      // 通过 background script 发送请求（避免 Firefox CORS 限制）
+      const response = await chrome.runtime.sendMessage({
+        action: 'openInIDE',
+        url: url
       });
 
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Failed to open repository');
+      if (response && response.success) {
+        showNotification('✅ Opened successfully!', 'success');
+      } else if (response && response.error) {
+        throw new Error(response.error);
+      } else {
+        throw new Error('Unknown error');
       }
-
-      const result = await response.json();
-      showNotification('✅ Opened successfully!', 'success');
 
     } catch (error) {
       console.error('GitHub Browser error:', error);
       
-      if (error.message.includes('Failed to fetch')) {
+      if (error.message.includes('fetch') || error.message.includes('network') || error.message.includes('NetworkError')) {
         showNotification(
           '❌ Cannot connect to GitHub Browser service. Make sure it is running.',
           'error'

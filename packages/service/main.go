@@ -204,11 +204,19 @@ func (s *Service) handleRepository(info *GitHubURLInfo) (string, error) {
 		}
 	}
 
-	// 如果指定了分支，切换分支
-	if info.Branch != "" && info.Branch != "main" && info.Branch != "master" {
-		log.Printf("🔀 Checking out branch: %s", info.Branch)
+	// 如果指定了分支或 tag，切换到该分支/tag
+	if info.Branch != "" {
+		log.Printf("🔀 Checking out branch/tag: %s", info.Branch)
+		// 先 fetch 确保有最新的远程分支
+		if err := s.gitClient.Fetch(repoPath); err != nil {
+			log.Printf("⚠️  Warning: git fetch failed: %v", err)
+		}
 		if err := s.gitClient.Checkout(repoPath, info.Branch); err != nil {
-			log.Printf("⚠️  Warning: failed to checkout branch: %v", err)
+			// 可能是 tag，尝试 checkout tag
+			log.Printf("⚠️  Branch checkout failed, trying as tag: %v", err)
+			if err := s.gitClient.CheckoutTag(repoPath, info.Branch); err != nil {
+				log.Printf("⚠️  Warning: failed to checkout branch/tag: %v", err)
+			}
 		}
 	}
 
@@ -216,22 +224,13 @@ func (s *Service) handleRepository(info *GitHubURLInfo) (string, error) {
 }
 
 func (s *Service) handlePullRequest(info *GitHubURLInfo) (string, error) {
-	// 获取 PR 信息
-	log.Printf("🔍 Fetching PR #%d information...", info.PRNumber)
-	pr, err := s.ghClient.GetPullRequest(info.Owner, info.Repo, info.PRNumber)
-	if err != nil {
-		return "", fmt.Errorf("failed to fetch PR: %v", err)
-	}
-
-	log.Printf("📋 PR #%d: %s (from %s:%s)", info.PRNumber, pr.Title, pr.HeadOwner, pr.HeadBranch)
-
 	repoPath := filepath.Join(s.cacheDir, fmt.Sprintf("%s-%s", info.Owner, info.Repo))
 
 	// 克隆或更新主仓库
 	if _, err := os.Stat(repoPath); err == nil {
-		log.Printf("📦 Repository exists, updating...")
-		if err := s.gitClient.Pull(repoPath); err != nil {
-			log.Printf("⚠️  Warning: git pull failed: %v", err)
+		log.Printf("📦 Repository exists, fetching updates...")
+		if err := s.gitClient.Fetch(repoPath); err != nil {
+			log.Printf("⚠️  Warning: git fetch failed: %v", err)
 		}
 	} else {
 		log.Printf("📥 Cloning repository...")
@@ -241,36 +240,17 @@ func (s *Service) handlePullRequest(info *GitHubURLInfo) (string, error) {
 		}
 	}
 
-	// 获取 PR 分支
-	// 如果是同一个仓库的分支，直接 checkout
-	// 如果是 fork 的分支，需要添加 remote 并 fetch
-	if pr.HeadOwner == info.Owner {
-		// 同一个仓库
-		log.Printf("🔀 Checking out PR branch: %s", pr.HeadBranch)
-		if err := s.gitClient.Checkout(repoPath, pr.HeadBranch); err != nil {
-			return "", fmt.Errorf("failed to checkout PR branch: %v", err)
-		}
-	} else {
-		// Fork 的仓库
-		remoteName := fmt.Sprintf("pr-%d", info.PRNumber)
-		remoteURL := fmt.Sprintf("https://github.com/%s/%s.git", pr.HeadOwner, info.Repo)
+	// 使用 git fetch 直接获取 PR 分支（无需 GitHub API）
+	// GitHub 支持 refs/pull/<PR_NUMBER>/head 格式
+	log.Printf("📥 Fetching PR #%d branch...", info.PRNumber)
+	prBranchName := fmt.Sprintf("pr-%d", info.PRNumber)
+	if err := s.gitClient.FetchPR(repoPath, info.PRNumber, prBranchName); err != nil {
+		return "", fmt.Errorf("failed to fetch PR: %v", err)
+	}
 
-		log.Printf("🔗 Adding remote: %s (%s)", remoteName, remoteURL)
-		if err := s.gitClient.AddRemote(repoPath, remoteName, remoteURL); err != nil {
-			// 如果 remote 已存在，忽略错误
-			log.Printf("⚠️  Remote may already exist: %v", err)
-		}
-
-		log.Printf("📥 Fetching PR branch: %s", pr.HeadBranch)
-		if err := s.gitClient.FetchBranch(repoPath, remoteName, pr.HeadBranch); err != nil {
-			return "", fmt.Errorf("failed to fetch PR branch: %v", err)
-		}
-
-		branchName := fmt.Sprintf("pr-%d", info.PRNumber)
-		log.Printf("🔀 Checking out PR branch as: %s", branchName)
-		if err := s.gitClient.CheckoutRemoteBranch(repoPath, remoteName, pr.HeadBranch, branchName); err != nil {
-			return "", fmt.Errorf("failed to checkout PR branch: %v", err)
-		}
+	log.Printf("🔀 Checking out PR branch: %s", prBranchName)
+	if err := s.gitClient.Checkout(repoPath, prBranchName); err != nil {
+		return "", fmt.Errorf("failed to checkout PR branch: %v", err)
 	}
 
 	return repoPath, nil

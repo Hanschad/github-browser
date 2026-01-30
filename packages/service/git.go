@@ -14,12 +14,11 @@ func NewGitClient(cacheDir string) *GitClient {
 	return &GitClient{cacheDir: cacheDir}
 }
 
-// Clone 克隆仓库（使用 shallow clone 优化）
+// Clone 克隆仓库
 func (gc *GitClient) Clone(repoURL, targetPath string) error {
+	// 不使用 --single-branch，以便可以 checkout 其他分支
 	cmd := exec.Command("git", "clone",
-		"--depth=1",
 		"--filter=blob:none",
-		"--single-branch",
 		repoURL,
 		targetPath)
 
@@ -117,4 +116,42 @@ func (gc *GitClient) GetCurrentBranch(repoPath string) (string, error) {
 		return "", fmt.Errorf("git branch failed: %v", err)
 	}
 	return strings.TrimSpace(string(output)), nil
+}
+
+// Fetch 获取所有远程更新
+func (gc *GitClient) Fetch(repoPath string) error {
+	cmd := exec.Command("git", "fetch", "--all", "--tags")
+	cmd.Dir = repoPath
+
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("git fetch failed: %v\nOutput: %s", err, string(output))
+	}
+	return nil
+}
+
+// CheckoutTag 切换到指定 tag
+func (gc *GitClient) CheckoutTag(repoPath, tag string) error {
+	cmd := exec.Command("git", "checkout", fmt.Sprintf("tags/%s", tag))
+	cmd.Dir = repoPath
+
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("git checkout tag failed: %v\nOutput: %s", err, string(output))
+	}
+	return nil
+}
+
+// FetchPR 获取 PR 分支（使用 GitHub 的 refs/pull/<number>/head 格式）
+func (gc *GitClient) FetchPR(repoPath string, prNumber int, localBranch string) error {
+	// 使用 git fetch origin pull/<PR_NUMBER>/head:<local_branch>
+	refspec := fmt.Sprintf("pull/%d/head:%s", prNumber, localBranch)
+	cmd := exec.Command("git", "fetch", "origin", refspec)
+	cmd.Dir = repoPath
+
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("git fetch PR failed: %v\nOutput: %s", err, string(output))
+	}
+	return nil
 }
