@@ -212,11 +212,7 @@ func (s *Service) handleRepository(info *GitHubURLInfo) (string, error) {
 			log.Printf("⚠️  Warning: git fetch failed: %v", err)
 		}
 		if err := s.gitClient.Checkout(repoPath, info.Branch); err != nil {
-			// 可能是 tag，尝试 checkout tag
-			log.Printf("⚠️  Branch checkout failed, trying as tag: %v", err)
-			if err := s.gitClient.CheckoutTag(repoPath, info.Branch); err != nil {
-				log.Printf("⚠️  Warning: failed to checkout branch/tag: %v", err)
-			}
+			return "", fmt.Errorf("failed to checkout %s: %v", info.Branch, err)
 		}
 	}
 
