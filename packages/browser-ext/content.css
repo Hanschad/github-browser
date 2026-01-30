@@ -1,0 +1,77 @@
+/* GitHub Browser - Content Styles */
+
+.github-browser-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 12px;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 20px;
+  white-space: nowrap;
+  vertical-align: middle;
+  cursor: pointer;
+  user-select: none;
+  border: 1px solid;
+  border-radius: 6px;
+  appearance: none;
+  transition: all 0.2s ease;
+}
+
+.github-browser-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.github-browser-btn:active {
+  transform: translateY(0);
+}
+
+.github-browser-btn .octicon {
+  margin-right: 4px;
+}
+
+/* 通知样式 */
+.github-browser-notification {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  padding: 12px 20px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 10000;
+  transition: opacity 0.3s ease;
+  max-width: 400px;
+}
+
+.github-browser-notification-info {
+  background: #0969da;
+  color: white;
+}
+
+.github-browser-notification-success {
+  background: #1a7f37;
+  color: white;
+}
+
+.github-browser-notification-error {
+  background: #d1242f;
+  color: white;
+}
+
+/* 固定位置的按钮（备选方案） */
+.github-browser-btn-fixed {
+  position: fixed;
+  top: 70px;
+  right: 20px;
+  z-index: 9999;
+  background: #238636;
+  color: white;
+  border-color: rgba(27, 31, 36, 0.15);
+}
+
+.github-browser-btn-fixed:hover {
+  background: #2ea043;
+}

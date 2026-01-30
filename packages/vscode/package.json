@@ -1,0 +1,86 @@
+{
+  "name": "github-browser",
+  "displayName": "GitHub Browser",
+  "description": "Open GitHub repositories and PRs instantly with full LSP support",
+  "version": "1.0.0",
+  "publisher": "github-browser",
+  "engines": {
+    "vscode": "^1.80.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "keywords": [
+    "github",
+    "git",
+    "repository",
+    "pull request",
+    "pr"
+  ],
+  "activationEvents": [],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "github-browser.openRepository",
+        "title": "GitHub Browser: Open Repository"
+      },
+      {
+        "command": "github-browser.openFromClipboard",
+        "title": "GitHub Browser: Open from Clipboard"
+      },
+      {
+        "command": "github-browser.openPR",
+        "title": "GitHub Browser: Open Pull Request"
+      },
+      {
+        "command": "github-browser.openConfig",
+        "title": "GitHub Browser: Open Configuration"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "github-browser.openFromClipboard",
+        "key": "ctrl+shift+g ctrl+shift+o",
+        "mac": "cmd+shift+g cmd+shift+o"
+      }
+    ],
+    "configuration": {
+      "title": "GitHub Browser",
+      "properties": {
+        "github-browser.serviceUrl": {
+          "type": "string",
+          "default": "http://localhost:9527",
+          "description": "GitHub Browser service URL"
+        },
+        "github-browser.autoCheckService": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically check if service is running"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src --ext ts",
+    "test": "node ./out/test/runTest.js",
+    "package": "vsce package"
+  },
+  "devDependencies": {
+    "@types/node": "^18.0.0",
+    "@types/node-fetch": "^2.6.13",
+    "@types/vscode": "^1.80.0",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "@vscode/vsce": "^2.19.0",
+    "eslint": "^8.0.0",
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "node-fetch": "^2.6.12"
+  }
+}

@@ -1,0 +1,10 @@
+id = "github-browser"
+name = "GitHub Browser"
+description = "Open GitHub repositories and PRs instantly with full LSP support"
+version = "1.0.0"
+schema_version = 1
+authors = ["GitHub Browser Team"]
+repository = "https://github.com/your-repo/github-browser"
+
+[lib]
+kind = "Rust"

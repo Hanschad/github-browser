@@ -1,0 +1,40 @@
+# Build artifacts
+*.zip
+*.vsix
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Node.js
+node_modules/
+out/
+dist/
+
+# Go
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+packages/service/github-browser-service
+
+# Rust
+target/
+Cargo.lock
+
+# Logs
+*.log
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Config (contains tokens)
+.github-browser/
+
+# Temporary files
+*.tmp
+*.temp
