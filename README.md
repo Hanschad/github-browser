@@ -167,9 +167,31 @@ github-browser/
   "port": 9527,
   "defaultIDE": "code",
   "githubToken": "",
-  "cacheDir": "/home/user/.github-browser/repos"
+  "cacheDir": "/home/user/.github-browser/repos",
+  "pathMappings": [
+    { "pattern": "microsoft", "localPath": "~/opensource/microsoft" },
+    { "pattern": "*", "localPath": "~/github" }
+  ]
 }
 ```
+
+### 路径映射
+
+通过 `pathMappings` 可以将不同的 GitHub 用户/组织映射到不同的本地目录：
+
+```json
+{
+  "pathMappings": [
+    { "pattern": "my-company", "localPath": "~/work" },
+    { "pattern": "my-company/special-repo", "localPath": "~/work/special" },
+    { "pattern": "*", "localPath": "~/github" }
+  ]
+}
+```
+
+匹配优先级：`owner/repo` > `owner` > `*` > 默认 cacheDir
+
+也可以通过浏览器扩展的设置页面配置（Settings → Path Mappings）。
 
 ### 获取 GitHub Token（可选）
 

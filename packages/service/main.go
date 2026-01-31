@@ -44,8 +44,11 @@ func main() {
 		config = DefaultConfig()
 	}
 
-	// 创建缓存目录
-	cacheDir := filepath.Join(os.Getenv("HOME"), DefaultCacheDir)
+	// 创建默认缓存目录
+	cacheDir := config.CacheDir
+	if cacheDir == "" {
+		cacheDir = filepath.Join(os.Getenv("HOME"), DefaultCacheDir)
+	}
 	if err := os.MkdirAll(cacheDir, 0755); err != nil {
 		log.Fatalf("Failed to create cache directory: %v", err)
 	}
@@ -188,7 +191,7 @@ func (s *Service) handleOpen(c *gin.Context) {
 }
 
 func (s *Service) handleRepository(info *GitHubURLInfo) (string, error) {
-	repoPath := filepath.Join(s.cacheDir, fmt.Sprintf("%s-%s", info.Owner, info.Repo))
+	repoPath := s.config.GetRepoPath(info.Owner, info.Repo)
 
 	// 克隆或更新
 	if _, err := os.Stat(repoPath); err == nil {
@@ -220,7 +223,7 @@ func (s *Service) handleRepository(info *GitHubURLInfo) (string, error) {
 }
 
 func (s *Service) handlePullRequest(info *GitHubURLInfo) (string, error) {
-	repoPath := filepath.Join(s.cacheDir, fmt.Sprintf("%s-%s", info.Owner, info.Repo))
+	repoPath := s.config.GetRepoPath(info.Owner, info.Repo)
 
 	// 克隆或更新主仓库
 	if _, err := os.Stat(repoPath); err == nil {

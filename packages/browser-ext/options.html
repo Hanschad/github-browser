@@ -35,6 +35,32 @@
       border: 1px solid #d0d7de;
       border-radius: 6px;
       font-size: 14px;
+      box-sizing: border-box;
+    }
+
+    .mapping-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 8px;
+      align-items: center;
+    }
+
+    .mapping-row input {
+      flex: 1;
+    }
+
+    .mapping-row input:first-child {
+      flex: 0.4;
+    }
+
+    .mapping-row button {
+      padding: 8px 12px;
+      background: #d1242f;
+      flex-shrink: 0;
+    }
+
+    .mapping-row button:hover {
+      background: #b91c1c;
     }
 
     .help-text {
@@ -108,6 +134,15 @@
       <div class="help-text">
         The IDE to open repositories in.
       </div>
+    </div>
+
+    <div class="form-group">
+      <label>Path Mappings</label>
+      <div class="help-text" style="margin-bottom: 8px;">
+        Map GitHub owners/repos to local directories. More specific patterns take priority.
+      </div>
+      <div id="path-mappings"></div>
+      <button type="button" id="add-mapping" style="margin-top: 8px; background: #6e7781;">+ Add Mapping</button>
     </div>
 
     <button type="submit">Save Settings</button>

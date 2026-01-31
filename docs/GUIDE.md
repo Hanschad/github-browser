@@ -130,7 +130,12 @@ go build -o github-browser-service
   "port": 9527,
   "defaultIDE": "code",
   "githubToken": "",
-  "cacheDir": "/home/user/.github-browser/repos"
+  "cacheDir": "/home/user/.github-browser/repos",
+  "pathMappings": [
+    { "pattern": "microsoft", "localPath": "~/projects/microsoft" },
+    { "pattern": "my-org/my-repo", "localPath": "~/work/my-repo" },
+    { "pattern": "*", "localPath": "~/github" }
+  ]
 }
 ```
 
@@ -142,7 +147,13 @@ go build -o github-browser-service
   - 用于访问私有仓库
   - 提高 API 限制
   - 获取方式：https://github.com/settings/tokens
-- `cacheDir`: 仓库缓存目录
+- `cacheDir`: 默认仓库缓存目录
+- `pathMappings`: 路径映射规则（可选）
+  - 将 GitHub owner/repo 映射到本地目录
+  - 支持三种匹配模式（按优先级排序）：
+    1. `owner/repo` - 精确匹配特定仓库
+    2. `owner` - 匹配该用户/组织下的所有仓库
+    3. `*` - 通配符，匹配所有其他仓库
 
 #### 系统服务管理
 
@@ -603,6 +614,50 @@ curl -X DELETE http://localhost:9527/cache/microsoft-vscode
 ---
 
 ## 高级配置
+
+### 路径映射（Path Mappings）
+
+通过 `pathMappings` 配置项，可以将不同的 GitHub 用户/组织/仓库映射到不同的本地目录。
+
+**配置示例**：
+
+```json
+{
+  "pathMappings": [
+    { "pattern": "my-company", "localPath": "~/work" },
+    { "pattern": "my-company/important-repo", "localPath": "~/work/important" },
+    { "pattern": "microsoft", "localPath": "~/opensource/microsoft" },
+    { "pattern": "*", "localPath": "~/github" }
+  ]
+}
+```
+
+**匹配规则**（按优先级从高到低）：
+
+| 模式 | 说明 | 示例 |
+|------|------|------|
+| `owner/repo` | 精确匹配特定仓库 | `microsoft/vscode` → `~/work/vscode` |
+| `owner` | 匹配该用户/组织下的所有仓库 | `microsoft` → `~/opensource/microsoft/vscode` |
+| `*` | 通配符，匹配所有其他仓库 | 任意仓库 → `~/github/owner-repo` |
+
+**实际效果示例**：
+
+使用上述配置，各 URL 会被克隆到以下位置：
+
+| GitHub URL | 本地路径 |
+|------------|---------|
+| `github.com/my-company/important-repo` | `~/work/important` |
+| `github.com/my-company/other-repo` | `~/work/other-repo` |
+| `github.com/microsoft/vscode` | `~/opensource/microsoft/vscode` |
+| `github.com/torvalds/linux` | `~/github/torvalds-linux` |
+
+**通过浏览器扩展配置**：
+
+1. 点击浏览器扩展图标 → Settings
+2. 在 "Path Mappings" 区域添加映射规则
+3. 点击 "Save Settings"
+
+> **注意**：修改配置后需要重启服务才能生效。
 
 ### 自定义缓存目录
 
