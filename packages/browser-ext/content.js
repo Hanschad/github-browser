@@ -116,40 +116,53 @@
     let inserted = false;
 
     if (pageType === 'pull_request') {
-      // PR 页面：多种位置尝试
-      const targets = [
-        // 新版 GitHub PR 页面
-        '.gh-header-actions',
-        // PR 标题区域
-        '.gh-header-show .flex-md-row-reverse',
-        '.gh-header-show .d-flex.flex-items-center',
-        // 旧版
-        '.gh-header-meta',
-        '#partial-discussion-header .flex-md-row-reverse',
-        // PR 操作按钮区域 (Edit, ... 按钮旁边)
-        '.js-issue-labels + div',
-        '.pr-review-tools',
-        // 最新版 - PR header 区域
-        '[data-testid="issue-header-actions"]',
-        '.issue-header-actions'
-      ];
-      for (const sel of targets) {
-        const target = document.querySelector(sel);
-        if (target) {
-          target.prepend(button);
-          inserted = true;
-          break;
+      // PR 页面：放在 Edit/Code 按钮旁边
+      
+      // 查找右上角的 Code 下拉按钮（带有 aria-haspopup 的按钮，且可见）
+      const allButtons = document.querySelectorAll('button');
+      for (const btn of allButtons) {
+        const text = btn.textContent.trim();
+        // 匹配 Code 按钮：文本以 Code 开头，有下拉菜单属性，是小尺寸按钮
+        if ((text === 'Code' || text.startsWith('Code')) && 
+            btn.getAttribute('aria-haspopup') === 'true' &&
+            btn.getAttribute('data-size') === 'small') {
+          const parent = btn.parentElement;
+          // 检查父元素是否可见（offsetHeight > 0）
+          if (parent && parent.offsetHeight > 0) {
+            btn.before(button);
+            inserted = true;
+            break;
+          }
         }
       }
       
-      // 备选：找到 PR 页面的任意 header 区域
+      // 备选：查找可见的 Edit 按钮
       if (!inserted) {
-        const prHeader = document.querySelector('.gh-header, .js-issue-title, #partial-discussion-header');
-        if (prHeader) {
-          const headerParent = prHeader.closest('.d-flex') || prHeader.parentElement;
-          if (headerParent) {
-            headerParent.appendChild(button);
+        for (const btn of allButtons) {
+          const text = btn.textContent.trim();
+          if (text === 'Edit' && btn.getAttribute('data-size') === 'small') {
+            const parent = btn.parentElement;
+            if (parent && parent.offsetHeight > 0) {
+              btn.after(button);
+              inserted = true;
+              break;
+            }
+          }
+        }
+      }
+      
+      // 备选：通过选择器查找
+      if (!inserted) {
+        const targets = [
+          '.gh-header-actions',
+          '[data-testid="issue-header-actions"]'
+        ];
+        for (const sel of targets) {
+          const target = document.querySelector(sel);
+          if (target && target.offsetHeight > 0) {
+            target.prepend(button);
             inserted = true;
+            break;
           }
         }
       }
@@ -171,37 +184,58 @@
         }
       }
     } else if (pageType === 'repository' || pageType === 'directory') {
-      // 仓库主页/目录页：放在 Code 绿色按钮旁边
-      const targets = [
-        // 绿色 Code 按钮
-        'get-repo',
-        '[data-target*="get-repo"]',
-        'button:has([data-component="leadingVisual"] svg.octicon-code)',
-        // 按钮组容器
-        '.file-navigation .d-flex.gap-2',
-        '.react-directory-row-heading .d-flex'
-      ];
-      for (const sel of targets) {
-        const target = document.querySelector(sel);
-        if (target) {
-          const parent = target.closest('.d-flex.gap-2, .d-flex.flex-items-center') || target.parentElement;
+      // 仓库主页/目录页：放在 Code 按钮旁边
+      
+      // 方法1：查找包含 "Code" 文字的按钮（最可靠）
+      const allButtons = document.querySelectorAll('button, summary');
+      for (const btn of allButtons) {
+        const text = btn.textContent.trim();
+        // 匹配 "Code" 按钮（通常是绿色的下拉按钮）
+        if ((text === 'Code' || text.startsWith('Code')) && 
+            (btn.classList.contains('btn-primary') || btn.closest('.btn-primary') || 
+             btn.querySelector('.octicon-code') || btn.closest('[data-component="IconButton"]'))) {
+          const parent = btn.closest('.d-flex, .gap-2, .BtnGroup') || btn.parentElement;
           if (parent) {
-            parent.appendChild(button);
+            // 在 Code 按钮前面插入
+            btn.before(button);
             inserted = true;
             break;
           }
         }
       }
       
-      // 备选：查找包含 "Code" 文字的按钮
+      // 方法2：通过选择器查找
       if (!inserted) {
-        const btns = document.querySelectorAll('button');
-        for (const btn of btns) {
-          const text = btn.textContent.trim();
-          if (text === 'Code' && btn.classList.contains('btn-primary')) {
-            btn.parentElement.appendChild(button);
+        const targets = [
+          // React 版本的 Code 按钮容器
+          '[class*="react-code-view"] .d-flex.gap-2',
+          // get-repo 组件
+          'get-repo',
+          '#repo-content-pjax-container .d-flex.gap-2',
+          // 文件导航区域
+          '.file-navigation .d-flex.gap-2',
+          '.Box-header .d-flex.gap-2'
+        ];
+        for (const sel of targets) {
+          const target = document.querySelector(sel);
+          if (target) {
+            target.prepend(button);
             inserted = true;
             break;
+          }
+        }
+      }
+      
+      // 方法3：查找 Edit 按钮，在其旁边插入
+      if (!inserted) {
+        const editBtn = Array.from(document.querySelectorAll('button, a')).find(
+          el => el.textContent.trim() === 'Edit' || el.textContent.trim() === 'Go to file'
+        );
+        if (editBtn) {
+          const parent = editBtn.closest('.d-flex, .gap-2') || editBtn.parentElement;
+          if (parent) {
+            parent.appendChild(button);
+            inserted = true;
           }
         }
       }
