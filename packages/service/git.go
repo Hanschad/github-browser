@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os/exec"
+	"strings"
 )
 
 type GitClient struct {
@@ -41,31 +42,53 @@ func (gc *GitClient) Pull(repoPath string) error {
 }
 
 // Checkout 切换分支或 tag
+// ref 可能包含路径（如 "feature/develop/src/file.go"），需要智能解析分支名
 func (gc *GitClient) Checkout(repoPath, ref string) error {
-	// 1. 尝试直接 checkout (适用于本地分支或 tag)
+	// 1. 先 fetch 确保远程引用是最新的
+	gc.Fetch(repoPath)
+
+	// 2. 尝试直接 checkout 整个 ref (适用于简单分支名或 tag)
+	if gc.tryCheckout(repoPath, ref) {
+		return nil
+	}
+
+	// 3. 如果失败，可能是因为 ref 包含路径，尝试从长到短匹配分支名
+	// 例如 "feature/develop/src/file" -> 尝试 "feature/develop/src/file", "feature/develop/src", "feature/develop", "feature"
+	parts := strings.Split(ref, "/")
+	for i := len(parts); i >= 1; i-- {
+		candidate := strings.Join(parts[:i], "/")
+		if gc.tryCheckout(repoPath, candidate) {
+			return nil
+		}
+	}
+
+	return fmt.Errorf("git checkout failed for ref %s", ref)
+}
+
+// tryCheckout 尝试 checkout 指定的 ref，成功返回 true
+func (gc *GitClient) tryCheckout(repoPath, ref string) bool {
+	// 1. 尝试直接 checkout (本地分支或 tag)
 	cmd := exec.Command("git", "checkout", ref)
 	cmd.Dir = repoPath
 	if _, err := cmd.CombinedOutput(); err == nil {
-		return nil
-	} else {
-		// 2. 如果失败，尝试作为远程分支处理
-		// git checkout -b <ref> origin/<ref>
-		cmd = exec.Command("git", "checkout", "-b", ref, fmt.Sprintf("origin/%s", ref))
-		cmd.Dir = repoPath
-		if _, err := cmd.CombinedOutput(); err == nil {
-			return nil
-		}
-
-		// 3. 如果还是失败，尝试作为 tag 显式 checkout
-		// git checkout tags/<ref>
-		cmd = exec.Command("git", "checkout", fmt.Sprintf("tags/%s", ref))
-		cmd.Dir = repoPath
-		if _, err := cmd.CombinedOutput(); err == nil {
-			return nil
-		} else {
-			return fmt.Errorf("git checkout failed for ref %s", ref)
-		}
+		return true
 	}
+
+	// 2. 尝试从远程分支创建本地分支
+	cmd = exec.Command("git", "checkout", "-b", ref, fmt.Sprintf("origin/%s", ref))
+	cmd.Dir = repoPath
+	if _, err := cmd.CombinedOutput(); err == nil {
+		return true
+	}
+
+	// 3. 尝试作为 tag 显式 checkout
+	cmd = exec.Command("git", "checkout", fmt.Sprintf("tags/%s", ref))
+	cmd.Dir = repoPath
+	if _, err := cmd.CombinedOutput(); err == nil {
+		return true
+	}
+
+	return false
 }
 
 // Fetch 获取所有远程更新

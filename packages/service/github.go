@@ -110,14 +110,17 @@ func ParseGitHubURL(url string) (*GitHubURLInfo, error) {
 		},
 		{
 			// Tree (directory): https://github.com/owner/repo/tree/branch/path/to/dir
-			regex: regexp.MustCompile(`github\.com/([^/]+)/([^/]+)/tree/([^/]+)(?:/(.+))?$`),
+			// 注意：分支名可能包含 `/`（如 feature/develop），所以捕获整个路径
+			regex: regexp.MustCompile(`github\.com/([^/]+)/([^/]+)/tree/(.+)$`),
 			handler: func(matches []string) (*GitHubURLInfo, error) {
+				// matches[3] 包含 branch 和可能的 filepath
+				// 需要在后续通过 git 验证来确定分支名边界
 				return &GitHubURLInfo{
 					Owner:    matches[1],
 					Repo:     matches[2],
 					Type:     URLTypeRepo,
-					Branch:   matches[3],
-					FilePath: matches[4],
+					Branch:   matches[3], // 整个路径，后续需要验证
+					FilePath: "",
 				}, nil
 			},
 		},
