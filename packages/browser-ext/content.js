@@ -103,7 +103,7 @@
   function injectButton() {
     const pageType = detectPageType();
     
-    if (pageType === 'unknown') {
+    if (pageType === 'unknown' || pageType === 'file') {
       return;
     }
 
@@ -164,23 +164,6 @@
             inserted = true;
             break;
           }
-        }
-      }
-    } else if (pageType === 'file') {
-      // 文件页面：放在文件操作栏 (Raw/Blame 按钮旁边)
-      const targets = [
-        '.react-blob-header-edit-and-raw-actions',
-        '[data-testid="raw-button"]',
-        '.Box-header .d-flex.gap-2',
-        '.Box-header button[data-hotkey]'
-      ];
-      for (const sel of targets) {
-        const target = document.querySelector(sel);
-        if (target) {
-          const parent = target.closest('.d-flex, .BtnGroup') || target.parentElement;
-          parent.prepend(button);
-          inserted = true;
-          break;
         }
       }
     } else if (pageType === 'repository' || pageType === 'directory') {
