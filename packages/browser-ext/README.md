@@ -8,18 +8,27 @@
 - ✅ 支持仓库、文件、PR 等所有页面
 - ✅ 键盘快捷键：`Shift+O`
 - ✅ 从剪贴板打开
-- ✅ 自动检测服务状态
+- ✅ 自动检测本地后端状态（Native Host 优先，HTTP 服务回退）
 - ✅ 支持多种 IDE
 
 ## 安装
 
 ### Chrome/Edge
 
+先安装 Native Host：
+
+```bash
+cd ../service
+./install-native-host.sh
+```
+
 1. 下载扩展文件
 2. 打开 `chrome://extensions/`
 3. 启用"开发者模式"
 4. 点击"加载已解压的扩展程序"
 5. 选择 `browser-ext` 目录
+
+扩展加载后，确认扩展 ID 为 `leikfbanhflejfmlnejhigjbfpaknljd`。
 
 ### Firefox
 
@@ -30,10 +39,17 @@
 
 ## 前置要求
 
-需要先安装并运行 GitHub Browser 服务：
+Chrome/Edge 推荐安装 Native Host：
 
 ```bash
-cd service
+cd ../service
+./install-native-host.sh
+```
+
+如果你使用 Firefox，或想保留旧链路，也可以继续安装并运行本地 HTTP 服务：
+
+```bash
+cd ../service
 ./install.sh
 ```
 
@@ -75,7 +91,7 @@ cd service
 
 默认：`http://localhost:9527`
 
-如果服务运行在其他端口，修改此设置。
+这是 HTTP 回退地址。Chrome/Edge 在检测到 Native Host 时会优先使用本地宿主。
 
 ### 默认 IDE
 
@@ -117,9 +133,20 @@ cd service
 
 ## 故障排除
 
-### 服务未运行
+### Native Host 未安装
 
-如果扩展显示 "Service not running"：
+如果扩展显示后端不可用，先检查 Native Host 是否已安装：
+
+```bash
+cd ../service
+./install-native-host.sh
+```
+
+然后重新加载扩展，并确认扩展 ID 是 `leikfbanhflejfmlnejhigjbfpaknljd`。
+
+### HTTP 服务未运行
+
+如果你依赖 HTTP 回退链路：
 
 1. 检查服务是否运行：
    ```bash

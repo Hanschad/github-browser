@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"os/exec"
 	"runtime"
 	"strings"
 )
@@ -42,8 +41,12 @@ func OpenInIDE(ideName, path string, line int) error {
 		if line > 0 {
 			cmdStr = fmt.Sprintf("nvim +%d %s", line, path)
 		}
-		return exec.Command("osascript", "-e",
-			fmt.Sprintf(`tell application "Terminal" to do script "%s"`, cmdStr)).Start()
+		cmd, err := buildCommand("osascript", "-e",
+			fmt.Sprintf(`tell application "Terminal" to do script "%s"`, cmdStr))
+		if err != nil {
+			return err
+		}
+		return cmd.Start()
 	}
 
 	var args []string
@@ -74,6 +77,9 @@ func OpenInIDE(ideName, path string, line int) error {
 		}
 	}
 
-	cmd := exec.Command(config.cmd, args...)
+	cmd, err := buildCommand(config.cmd, args...)
+	if err != nil {
+		return err
+	}
 	return cmd.Start()
 }

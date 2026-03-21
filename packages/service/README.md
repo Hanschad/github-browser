@@ -1,6 +1,6 @@
 # GitHub Browser Service
 
-本地 HTTP 服务，用于克隆和打开 GitHub 仓库和 PR。
+本地 Go 后端，用于克隆和打开 GitHub 仓库和 PR。它既可以作为 HTTP 服务运行，也可以作为 Chrome Native Messaging host 运行。
 
 ## 功能特性
 
@@ -26,14 +26,30 @@ cd service
 3. 创建配置文件
 4. 设置系统服务（自动启动）
 
-### 方式 2：手动安装
+### 方式 2：只安装 Native Host（Chrome/Edge 浏览器扩展）
+
+```bash
+cd service
+./install-native-host.sh
+```
+
+这将：
+1. 构建二进制文件到 `~/.github-browser/bin`
+2. 创建默认配置文件
+3. 写入 Chrome / Edge / Chromium 的 Native Host manifest
+4. 让浏览器扩展可以直接通过 stdio 调用本地二进制
+
+### 方式 3：手动安装
 
 ```bash
 # 构建
 go build -o github-browser-service
 
-# 运行
+# 运行 HTTP 服务
 ./github-browser-service
+
+# 运行 Native Host
+./github-browser-service --native-host
 ```
 
 ## 配置
@@ -66,6 +82,17 @@ go build -o github-browser-service
 4. 复制 token 并填入配置文件
 
 ## API 接口
+
+## Native Messaging 接口
+
+Chrome / Edge 扩展通过 `chrome.runtime.connectNative("com.github.browser")` 与本地二进制通信。
+
+支持的消息：
+
+- `{"action":"health"}`
+- `{"action":"open","url":"https://github.com/owner/repo","ide":"code"}`
+- `{"action":"getConfig"}`
+- `{"action":"updateConfig","config":{...}}`
 
 ### POST /open
 

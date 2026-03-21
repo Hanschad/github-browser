@@ -28,11 +28,11 @@ type GitHubURLInfo struct {
 }
 
 type PullRequestInfo struct {
-	Number    int
-	Title     string
-	HeadOwner string
+	Number     int
+	Title      string
+	HeadOwner  string
 	HeadBranch string
-	BaseOwner string
+	BaseOwner  string
 	BaseBranch string
 }
 

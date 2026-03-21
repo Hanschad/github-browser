@@ -13,14 +13,31 @@
 
 ## 🚀 快速开始
 
-### 1. 安装本地服务
+### 1. 选择本地后端
+
+#### 方案 A：浏览器扩展走 Native Messaging（Chrome/Edge）
+
+```bash
+cd packages/service
+./install-native-host.sh
+```
+
+这是浏览器扩展的最轻量方案：
+
+- 不需要常驻 HTTP 服务
+- Chrome/Edge 直接通过 Native Host 调用本地 `git` 和 IDE
+- 仍然复用同一份 `~/.github-browser/config.json`
+
+#### 方案 B：安装本地 HTTP 服务
 
 ```bash
 cd packages/service
 ./install.sh
 ```
 
-### 2. 验证服务
+### 2. 验证后端
+
+如果你安装的是 HTTP 服务：
 
 ```bash
 curl http://localhost:9527/health
@@ -38,6 +55,13 @@ pnpm run compile
 ```
 
 #### 选项 B：浏览器扩展
+
+如果你想走 Native Messaging，先执行：
+
+```bash
+cd packages/service
+./install-native-host.sh
+```
 
 1. 打开 `chrome://extensions/`
 2. 启用"开发者模式"
@@ -95,13 +119,14 @@ curl -s -X POST http://localhost:9527/open \
 ┌─────────────────────────────────────────┐
 │  浏览器扩展 / IDE 插件 / 命令行          │
 └──────────────────┬──────────────────────┘
-                   │ HTTP
+                   │ Native Messaging / HTTP
                    ▼
 ┌─────────────────────────────────────────┐
-│   本地服务 (localhost:9527)              │
+│   本地 Go 二进制                         │
+│   - Chrome Native Host (stdio)          │
+│   - 可选 HTTP 服务 (localhost:9527)      │
 │   - 解析 GitHub URL (repo/PR)            │
 │   - 克隆/更新仓库                         │
-│   - 处理 PR (checkout branch)            │
 │   - 启动 IDE                             │
 └─────────────────────────────────────────┘
 ```

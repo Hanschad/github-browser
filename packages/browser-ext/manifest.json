@@ -3,6 +3,7 @@
   "name": "GitHub Browser",
   "version": "1.0.0",
   "description": "Open GitHub repositories and PRs instantly in your local IDE with full LSP support",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA3RKFLhdDbnp+vC1o7/jw5DODDye31dMMf68a7sKJtwRcUln4EZk0jqr0FjQgyEayQCWuxPYwilHx0BPJY2g6aLOriciLjNsShR3pFENDCIrcCn7RhfCFIfSON2NTt4pByxFDXdNgOVzctNsjfhphppfmuEA45CmzTx8bprI5gkAd4UXToiX5RzonZkEi0zI+9Jvp585QaBL4onuW7jKmOylgNlrFl4t1U7sC8AmsUa0CnzHLF+/mXiaEHOTQwR2EvXDF/1qwUsOSiAClGwztZEHVepYTxw68nHZ2Vo14CWh9XaIICJErhZqfbTXzVbOozMxSxczXHfggt9Zi+h1CaQIDAQAB",
   "browser_specific_settings": {
     "gecko": {
       "id": "github-browser@example.com",
@@ -12,10 +13,13 @@
   "permissions": [
     "activeTab",
     "clipboardWrite",
-    "storage"
+    "storage",
+    "nativeMessaging"
   ],
   "host_permissions": [
-    "https://github.com/*"
+    "https://github.com/*",
+    "http://localhost/*",
+    "http://127.0.0.1/*"
   ],
   "action": {
     "default_popup": "popup.html",
@@ -38,7 +42,7 @@
     }
   ],
   "background": {
-    "scripts": ["background.js"]
+    "service_worker": "background.js"
   },
   "options_ui": {
     "page": "options.html",

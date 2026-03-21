@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"os/exec"
 	"strings"
 )
 
@@ -17,10 +16,13 @@ func NewGitClient(cacheDir string) *GitClient {
 // Clone 克隆仓库
 func (gc *GitClient) Clone(repoURL, targetPath string) error {
 	// 不使用 --single-branch，以便可以 checkout 其他分支
-	cmd := exec.Command("git", "clone",
+	cmd, err := buildCommand("git", "clone",
 		"--filter=blob:none",
 		repoURL,
 		targetPath)
+	if err != nil {
+		return err
+	}
 
 	output, err := cmd.CombinedOutput()
 	if err != nil {
@@ -31,7 +33,10 @@ func (gc *GitClient) Clone(repoURL, targetPath string) error {
 
 // Pull 更新仓库
 func (gc *GitClient) Pull(repoPath string) error {
-	cmd := exec.Command("git", "pull")
+	cmd, err := buildCommand("git", "pull")
+	if err != nil {
+		return err
+	}
 	cmd.Dir = repoPath
 
 	output, err := cmd.CombinedOutput()
@@ -68,21 +73,30 @@ func (gc *GitClient) Checkout(repoPath, ref string) error {
 // tryCheckout 尝试 checkout 指定的 ref，成功返回 true
 func (gc *GitClient) tryCheckout(repoPath, ref string) bool {
 	// 1. 尝试直接 checkout (本地分支或 tag)
-	cmd := exec.Command("git", "checkout", ref)
+	cmd, err := buildCommand("git", "checkout", ref)
+	if err != nil {
+		return false
+	}
 	cmd.Dir = repoPath
 	if _, err := cmd.CombinedOutput(); err == nil {
 		return true
 	}
 
 	// 2. 尝试从远程分支创建本地分支
-	cmd = exec.Command("git", "checkout", "-b", ref, fmt.Sprintf("origin/%s", ref))
+	cmd, err = buildCommand("git", "checkout", "-b", ref, fmt.Sprintf("origin/%s", ref))
+	if err != nil {
+		return false
+	}
 	cmd.Dir = repoPath
 	if _, err := cmd.CombinedOutput(); err == nil {
 		return true
 	}
 
 	// 3. 尝试作为 tag 显式 checkout
-	cmd = exec.Command("git", "checkout", fmt.Sprintf("tags/%s", ref))
+	cmd, err = buildCommand("git", "checkout", fmt.Sprintf("tags/%s", ref))
+	if err != nil {
+		return false
+	}
 	cmd.Dir = repoPath
 	if _, err := cmd.CombinedOutput(); err == nil {
 		return true
@@ -93,7 +107,10 @@ func (gc *GitClient) tryCheckout(repoPath, ref string) bool {
 
 // Fetch 获取所有远程更新
 func (gc *GitClient) Fetch(repoPath string) error {
-	cmd := exec.Command("git", "fetch", "--all", "--tags")
+	cmd, err := buildCommand("git", "fetch", "--all", "--tags")
+	if err != nil {
+		return err
+	}
 	cmd.Dir = repoPath
 
 	output, err := cmd.CombinedOutput()
@@ -107,7 +124,10 @@ func (gc *GitClient) Fetch(repoPath string) error {
 func (gc *GitClient) FetchPR(repoPath string, prNumber int, localBranch string) error {
 	// 使用 git fetch origin pull/<PR_NUMBER>/head:<local_branch>
 	refspec := fmt.Sprintf("pull/%d/head:%s", prNumber, localBranch)
-	cmd := exec.Command("git", "fetch", "origin", refspec)
+	cmd, err := buildCommand("git", "fetch", "origin", refspec)
+	if err != nil {
+		return err
+	}
 	cmd.Dir = repoPath
 
 	output, err := cmd.CombinedOutput()

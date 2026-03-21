@@ -4,6 +4,14 @@
 (function() {
   'use strict';
 
+  function getExtensionRuntime() {
+    if (typeof chrome !== 'undefined' && chrome.runtime && typeof chrome.runtime.sendMessage === 'function') {
+      return chrome.runtime;
+    }
+
+    throw new Error('Extension context unavailable. Refresh the page after reloading the extension.');
+  }
+
   // 检测页面类型
   function detectPageType() {
     const path = window.location.pathname;
@@ -51,7 +59,8 @@
       showNotification('Opening in IDE...', 'info');
 
       // 通过 background script 发送请求（避免 Firefox CORS 限制）
-      const response = await chrome.runtime.sendMessage({
+      const runtime = getExtensionRuntime();
+      const response = await runtime.sendMessage({
         action: 'openInIDE',
         url: url
       });
@@ -67,9 +76,17 @@
     } catch (error) {
       console.error('GitHub Browser error:', error);
       
-      if (error.message.includes('fetch') || error.message.includes('network') || error.message.includes('NetworkError')) {
+      if (
+        error.message.includes('Extension context unavailable') ||
+        error.message.includes('Native host') ||
+        error.message.includes('service') ||
+        error.message.includes('network') ||
+        error.message.includes('disconnected')
+      ) {
         showNotification(
-          '❌ Cannot connect to GitHub Browser service. Make sure it is running.',
+          error.message.includes('Extension context unavailable')
+            ? '❌ Extension reloaded. Refresh this GitHub page and try again.'
+            : '❌ Cannot reach GitHub Browser backend. Install the native host or start the local service.',
           'error'
         );
       } else {
