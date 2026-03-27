@@ -133,37 +133,33 @@
     let inserted = false;
 
     if (pageType === 'pull_request') {
-      // PR 页面：放在 Edit/Code 按钮旁边
+      // PR 页面：放在 Awaiting approval / Code 按钮旁边（PR 合并状态栏区域）
       
-      // 查找右上角的 Code 下拉按钮（带有 aria-haspopup 的按钮，且可见）
-      const allButtons = document.querySelectorAll('button');
+      // 查找 PR 状态栏中的 Code 下拉按钮（在 Awaiting approval 旁边的那个）
+      const allButtons = document.querySelectorAll('button, summary');
       for (const btn of allButtons) {
         const text = btn.textContent.trim();
-        // 匹配 Code 按钮：文本以 Code 开头，有下拉菜单属性，是小尺寸按钮
         if ((text === 'Code' || text.startsWith('Code')) && 
-            btn.getAttribute('aria-haspopup') === 'true' &&
-            btn.getAttribute('data-size') === 'small') {
-          const parent = btn.parentElement;
-          // 检查父元素是否可见（offsetHeight > 0）
-          if (parent && parent.offsetHeight > 0) {
-            btn.before(button);
+            btn.getAttribute('aria-haspopup') === 'true') {
+          // 找到包含 Code 按钮的容器（通常是 flex 容器）
+          const container = btn.closest('.d-flex, .gh-header-meta, .flex-items-center') || btn.parentElement;
+          if (container && container.offsetHeight > 0) {
+            btn.after(button);
             inserted = true;
             break;
           }
         }
       }
       
-      // 备选：查找可见的 Edit 按钮
+      // 备选：查找包含 "Awaiting approval" 或审核状态的区域
       if (!inserted) {
-        for (const btn of allButtons) {
-          const text = btn.textContent.trim();
-          if (text === 'Edit' && btn.getAttribute('data-size') === 'small') {
-            const parent = btn.parentElement;
-            if (parent && parent.offsetHeight > 0) {
-              btn.after(button);
-              inserted = true;
-              break;
-            }
+        const statusItems = document.querySelectorAll('.State, [data-testid="pr-review-decision"]');
+        for (const item of statusItems) {
+          const container = item.closest('.d-flex, .gh-header-meta') || item.parentElement;
+          if (container && container.offsetHeight > 0) {
+            container.appendChild(button);
+            inserted = true;
+            break;
           }
         }
       }
